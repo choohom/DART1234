@@ -849,12 +849,9 @@ export default function App() {
               <div style={{ marginBottom: '2mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
               <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
               <div style={{ marginBottom: '2mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ......................................</div>
+              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ................................</div>
               <div style={{ marginBottom: '2mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
-                <div style={{ width: '75mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร ..</div>
-                <div style={{ width: '85mm' }}>ความสูง .........................................</div>
-              </div>
+              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร .............................. ความสูง ...................</div>
             </div>
           </div>
 
@@ -862,84 +859,84 @@ export default function App() {
           <div style={{ minHeight: '242mm', position: 'relative', paddingTop: '35mm' }}>
             <div style={{ position: 'absolute', top: '20mm', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
             
-            <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '10mm' }}>
+            <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '2mm' }}>
               11. รายการอุปกรณ์ที่ได้รับความเสียหาย {items.length} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้
             </div>
 
-            <div style={{ marginLeft: '10mm', marginBottom: '5mm' }}>
+            <div style={{ marginBottom: '2mm', marginLeft: '30mm' }}>
               11.1 รื้อถอน - ติดตั้งใหม่ {items.filter(i => i.status === 'damaged').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'damaged').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10mm', fontSize: '10pt' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: '10pt' }}>
               <thead>
-                <tr>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ราคา</th>
+                <tr style={{ backgroundColor: '#f2f2f2' }}>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>รายการ</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '50%' }}>ชื่อพัสดุ</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>จำนวน</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>หน่วย</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '20%' }}>ราคา</th>
                 </tr>
               </thead>
               <tbody>
                 {items.filter(i => i.status === 'damaged').map((item, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{idx + 1}</td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}>{item.material.name}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.material.unit}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{idx + 1}</td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}>{item.material.name}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.quantity}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.material.unit}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
                 {Array.from({ length: Math.max(0, 5 - items.filter(i => i.status === 'damaged').length) }).map((_, idx) => (
                   <tr key={`empty-${idx}`}>
-                    <td style={{ border: '1px solid black', padding: '2px', height: '1.5em' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px', height: '1.5em' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div style={{ marginLeft: '10mm', marginBottom: '5mm', marginTop: '10mm' }}>
+            <div style={{ marginBottom: '2mm', marginTop: '5mm', marginLeft: '30mm' }}>
               11.2 แผนกซ่อมแซม {items.filter(i => i.status === 'reusable').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'reusable').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10mm', fontSize: '10pt' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: '10pt' }}>
               <thead>
-                <tr>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ราคา</th>
+                <tr style={{ backgroundColor: '#f2f2f2' }}>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>รายการ</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '50%' }}>ชื่อพัสดุ</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>จำนวน</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>หน่วย</th>
+                  <th style={{ border: '1px solid black', padding: '5px', width: '20%' }}>ราคา</th>
                 </tr>
               </thead>
               <tbody>
                 {items.filter(i => i.status === 'reusable').map((item, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{idx + 1}</td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}>{item.material.name}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.material.unit}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{idx + 1}</td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}>{item.material.name}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.quantity}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.material.unit}</td>
+                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
                 {Array.from({ length: Math.max(0, 5 - items.filter(i => i.status === 'reusable').length) }).map((_, idx) => (
                   <tr key={`empty-re-${idx}`}>
-                    <td style={{ border: '1px solid black', padding: '2px', height: '1.5em' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px', height: '1.5em' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '20mm', marginTop: '15mm' }}>
-              จึงเรียนมาเพื่อพิจารณาอนุมัติให้ดำเนินการเบิกอุปกรณ์ไปซ่อมแซมตามรายการดังกล่าว พร้อมทั้งเป็นการเรียกเก็บเงินค่าเสียหายจากผู้กระทำละเมิด เป็นจำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
+            <div style={{ textAlign: 'justify', marginBottom: '30mm', marginTop: '5mm', lineHeight: '1.6' }}>
+              &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;จึงเรียนมาเพื่อพิจารณาอนุมัติให้ดำเนินการเบิกอุปกรณ์ไปซ่อมแซมตามรายการดังกล่าว พร้อมทั้งเป็นการเรียกเก็บเงินค่าเสียหายจากผู้กระทำละเมิด เป็นจำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
             <div style={{ textAlign: 'center', marginLeft: '80mm' }}>
