@@ -53,7 +53,6 @@ interface jsPDFWithAutoTable extends jsPDF {
 export default function App() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Selection State
@@ -389,9 +388,9 @@ export default function App() {
           new Paragraph({ text: "4. ชื่อผู้ขับขี่ ..............................................................................................................................", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
           new Paragraph({ text: "   บัตรประชาชนเลขที่ ......................................................................................................", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
           new Paragraph({ text: "5. ที่อยู่ตามบัตร ........................................................................................................................", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
-          new Paragraph({ text: "   ........................................................................................................... เบอร์โทรศัพท์ ....................................", alignment: AlignmentType.THAI_DISTRIBUTE }),
-          new Paragraph({ text: "6. ชื่อ/บริษัท เจ้าของรถยนต์ ..................................... เบอร์โทรศัพท์ ....................................", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
-          new Paragraph({ text: "7. ชื่อ/บริษัท ประกันภัย ............................................ เบอร์โทรศัพท์ ....................................", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
+          new Paragraph({ text: "   ........................................................................................................... เบอร์โทรศัพท์ ..........", alignment: AlignmentType.THAI_DISTRIBUTE }),
+          new Paragraph({ text: "6. ชื่อ/บริษัท เจ้าของรถยนต์ ..................................... เบอร์โทรศัพท์ ..........", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
+          new Paragraph({ text: "7. ชื่อ/บริษัท ประกันภัย ............................................ เบอร์โทรศัพท์ ..........", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
           new Paragraph({ text: "8. ผู้ลงนามในหนังสือรับสภาพหนี้", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
           new Paragraph({ text: "   [  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
           new Paragraph({ text: "9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ", indent: { left: 1417 }, alignment: AlignmentType.THAI_DISTRIBUTE }),
@@ -458,7 +457,7 @@ export default function App() {
     const element = document.getElementById('pdf-template');
     if (!element) return;
 
-    setExporting(true);
+    setLoading(true);
     try {
       const canvas = await html2canvas(element, {
         scale: 2, // Higher scale for better quality
@@ -493,7 +492,7 @@ export default function App() {
       console.error("Error generating PDF:", error);
       alert("เกิดข้อผิดพลาดในการสร้างไฟล์ PDF");
     } finally {
-      setExporting(false);
+      setLoading(false);
     }
   };
 
@@ -762,16 +761,12 @@ export default function App() {
                       Export Word
                     </button>
                     <button 
-                      disabled={items.length === 0 || exporting}
+                      disabled={items.length === 0}
                       onClick={exportPDF}
                       className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-100"
                     >
-                      {exporting ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <FileText className="w-5 h-5" />
-                      )}
-                      {exporting ? 'Exporting...' : 'Export PDF'}
+                      <FileText className="w-5 h-5" />
+                      Export PDF
                     </button>
                   </div>
                 </div>
@@ -819,7 +814,7 @@ export default function App() {
               textAlign: 'justify', 
               textJustify: 'inter-character', 
               wordBreak: 'break-word',
-              marginBottom: '2mm',
+              marginBottom: '1mm',
               lineHeight: '1.8',
               letterSpacing: '0.2px',
               textRendering: 'optimizeLegibility'
@@ -828,30 +823,30 @@ export default function App() {
             </div>
 
             <div style={{ marginLeft: '25mm' }}>
-              <div style={{ marginBottom: '2mm' }}>1. เหตุเกิดเมื่อ ...........................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>2. สถานที่เกิดเหตุ .......................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>3. หมายเลขทะเบียน ...................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>4. ชื่อผู้ขับขี่ ..................................................................................................</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ .........................................................</div>
-              <div style={{ marginBottom: '2mm' }}>5. ที่อยู่ตามบัตร ......................................................................................</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
+              <div style={{ marginBottom: '1mm' }}>1. เหตุเกิดเมื่อ .............................................................................</div>
+              <div style={{ marginBottom: '1mm' }}>2. สถานที่เกิดเหตุ .........................................................................</div>
+              <div style={{ marginBottom: '1mm' }}>3. หมายเลขทะเบียน .........................................................................</div>
+              <div style={{ marginBottom: '1mm' }}>4. ชื่อผู้ขับขี่ ................................................................................</div>
+              <div style={{ marginBottom: '1mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ .........................................................</div>
+              <div style={{ marginBottom: '1mm' }}>5. ที่อยู่ตามบัตร ......................................................................................</div>
+              <div style={{ display: 'flex', marginBottom: '1mm', marginLeft: '-25mm' }}>
                 <div style={{ width: '105mm' }}>......................................................................</div>
                 <div style={{ width: '85mm' }}>เบอร์โทรศัพท์ ..........</div>
               </div>
-              <div style={{ display: 'flex', marginBottom: '2mm' }}>
+              <div style={{ display: 'flex', marginBottom: '1mm' }}>
                 <div style={{ width: '75mm' }}>6. ชื่อ/บริษัท เจ้าของรถยนต์ ..........</div>
                 <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
               </div>
-              <div style={{ display: 'flex', marginBottom: '2mm' }}>
+              <div style={{ display: 'flex', marginBottom: '1mm' }}>
                 <div style={{ width: '75mm' }}>7. ชื่อ/บริษัท ประกันภัย ....................</div>
                 <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
               </div>
-              <div style={{ marginBottom: '2mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
-              <div style={{ marginBottom: '2mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ...........................................</div>
-              <div style={{ marginBottom: '2mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
+              <div style={{ marginBottom: '1mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
+              <div style={{ marginBottom: '1mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
+              <div style={{ marginBottom: '1mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
+              <div style={{ marginBottom: '1mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ...........................................</div>
+              <div style={{ marginBottom: '1mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
+              <div style={{ display: 'flex', marginBottom: '1mm', marginLeft: '-25mm' }}>
                 <div style={{ width: '75mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร ..</div>
                 <div style={{ width: '85mm' }}>ความสูง .......................</div>
               </div>
@@ -859,8 +854,8 @@ export default function App() {
           </div>
 
           {/* Page 2 */}
-          <div style={{ minHeight: '242mm', position: 'relative', paddingTop: '35mm' }}>
-            <div style={{ position: 'absolute', top: '20mm', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
+          <div style={{ minHeight: '257mm', position: 'relative', paddingTop: '20mm' }}>
+            <div style={{ position: 'absolute', top: '0', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
             
             <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '10mm' }}>
               11. รายการอุปกรณ์ที่ได้รับความเสียหาย {items.length} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้
@@ -981,16 +976,12 @@ export default function App() {
             Word
           </button>
           <button 
-            disabled={items.length === 0 || exporting}
+            disabled={items.length === 0}
             onClick={exportPDF}
             className="bg-slate-800 text-white px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-slate-900 transition-colors"
           >
-            {exporting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <FileText className="w-4 h-4" />
-            )}
-            {exporting ? '...' : 'PDF'}
+            <FileText className="w-4 h-4" />
+            PDF
           </button>
         </div>
       </div>

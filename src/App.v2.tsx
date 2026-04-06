@@ -53,7 +53,6 @@ interface jsPDFWithAutoTable extends jsPDF {
 export default function App() {
   const [materials, setMaterials] = useState<Material[]>([]);
   const [loading, setLoading] = useState(true);
-  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
   // Selection State
@@ -455,46 +454,268 @@ export default function App() {
   };
 
   const exportPDF = async () => {
-    const element = document.getElementById('pdf-template');
-    if (!element) return;
-
-    setExporting(true);
-    try {
-      const canvas = await html2canvas(element, {
-        scale: 2, // Higher scale for better quality
-        useCORS: true,
-        logging: false,
-        backgroundColor: '#ffffff'
-      });
-      
-      const imgData = canvas.toDataURL('image/jpeg', 1.0);
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      const imgProps = pdf.getImageProperties(imgData);
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
-      
-      // Handle multiple pages if necessary
-      let heightLeft = pdfHeight;
-      let position = 0;
-      const pageHeight = pdf.internal.pageSize.getHeight();
-
-      pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - pdfHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
-        heightLeft -= pageHeight;
+    const doc = new jsPDF() as jsPDFWithAutoTable;
+    
+    // Helper to convert ArrayBuffer to Base64 without stack overflow
+    const arrayBufferToBase64 = (buffer: ArrayBuffer) => {
+      let binary = '';
+      const bytes = new Uint8Array(buffer);
+      const len = bytes.byteLength;
+      for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
       }
+      return window.btoa(binary);
+    };
 
-      pdf.save("ค่าละเมิด1234_PI InnoTech.pdf");
-    } catch (error) {
-      console.error("Error generating PDF:", error);
-      alert("เกิดข้อผิดพลาดในการสร้างไฟล์ PDF");
-    } finally {
-      setExporting(false);
+    // Helper to fetch font and add to jsPDF
+    const addThaiFont = async () => {
+      try {
+        // Using jsdelivr from the main google/fonts repository for better stability
+        const regularFontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/sarabun/Sarabun-Regular.ttf';
+        const boldFontUrl = 'https://cdn.jsdelivr.net/gh/google/fonts@main/ofl/sarabun/Sarabun-Bold.ttf';
+        
+        const [regularRes, boldRes] = await Promise.all([
+          fetch(regularFontUrl),
+          fetch(boldFontUrl)
+        ]);
+        
+        if (!regularRes.ok) throw new Error(`Failed to fetch Regular font from jsdelivr: ${regularRes.status} ${regularRes.statusText}`);
+        if (!boldRes.ok) throw new Error(`Failed to fetch Bold font from jsdelivr: ${boldRes.status} ${boldRes.statusText}`);
+
+        const [regularBuffer, boldBuffer] = await Promise.all([
+          regularRes.arrayBuffer(),
+          boldRes.arrayBuffer()
+        ]);
+        
+        const regularBase64 = arrayBufferToBase64(regularBuffer);
+        const boldBase64 = arrayBufferToBase64(boldBuffer);
+        
+        doc.addFileToVFS('Sarabun-Regular.ttf', regularBase64);
+        doc.addFont('Sarabun-Regular.ttf', 'Sarabun', 'normal');
+        
+        doc.addFileToVFS('Sarabun-Bold.ttf', boldBase64);
+        doc.addFont('Sarabun-Bold.ttf', 'Sarabun', 'bold');
+        
+        doc.setFont('Sarabun', 'normal');
+        return true;
+      } catch (error) {
+        console.error("Error loading Thai font:", error);
+        return false;
+      }
+    };
+
+    const hasFont = await addThaiFont();
+    if (!hasFont) {
+      alert("ไม่สามารถโหลดฟอนต์ภาษาไทยได้ กรุณาลองใหม่อีกครั้ง");
+      return;
     }
+
+    // Helper to fetch image and convert to base64
+    const fetchImageBase64 = async (url: string) => {
+      try {
+        const response = await fetch(url);
+        const blob = await response.blob();
+        return new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+      } catch (error) {
+        console.error("Error fetching logo:", error);
+        return null;
+      }
+    };
+
+    const logoBase64 = await fetchImageBase64("https://img1.pic.in.th/images/PEA-02-Thai-Logo.md.jpg");
+
+    // Helper to group items by material name
+    const groupItems = (itemsList: AssessmentItem[]) => {
+      const grouped: { [key: string]: AssessmentItem } = {};
+      itemsList.forEach(item => {
+        const key = item.material.name;
+        if (grouped[key]) {
+          grouped[key] = {
+            ...grouped[key],
+            quantity: grouped[key].quantity + item.quantity,
+            totalPrice: grouped[key].totalPrice + item.totalPrice
+          };
+        } else {
+          grouped[key] = { ...item };
+        }
+      });
+      return Object.values(grouped);
+    };
+
+    const damagedItems = groupItems(items.filter(i => i.status === 'damaged'));
+    const reusableItems = groupItems(items.filter(i => i.status === 'reusable'));
+    
+    const totalItems = damagedItems.length + reusableItems.length;
+    const damagedTotal = damagedItems.reduce((sum, i) => sum + i.totalPrice, 0);
+    const reusableTotal = reusableItems.reduce((sum, i) => sum + i.totalPrice, 0);
+
+    // Page 1
+    let currentY = 20;
+
+    // Logo
+    if (logoBase64) {
+      doc.addImage(logoBase64, 'JPEG', 25, currentY, 30, 25);
+      currentY += 30;
+    }
+
+    // Header Table
+    doc.setFontSize(14);
+    const lineHeight = 7;
+    
+    doc.text("จาก ......................................................................", 25, currentY);
+    doc.text("ถึง ......................................................................", 105, currentY, { align: "center" });
+    currentY += lineHeight + 3;
+    doc.text("เลขที่ .....................................................................", 25, currentY);
+    doc.text("วันที่ .....................................................................", 105, currentY, { align: "center" });
+    currentY += lineHeight + 8;
+
+    // Subject
+    doc.setFont('Sarabun', 'normal');
+    doc.text("เรื่อง   การประเมินค่าเสียหายที่เกิดขึ้นกับระบบจำหน่าย", 25, currentY);
+    currentY += lineHeight + 3;
+    doc.text("เรียน ......................................................................", 25, currentY);
+    currentY += lineHeight + 5;
+
+    // Content
+    const content = "ตามที่ได้ดำเนินการตรวจสอบและประเมินราคาค่าเสียหายเพื่อเรียกร้องจากผู้กระทำละเมิด โดยมีรายละเอียด ดังนี้";
+    const splitContent = doc.splitTextToSize(content, 160);
+    doc.text(splitContent, 40, currentY);
+    currentY += (splitContent.length * lineHeight) + 5;
+
+    // Points 1-10
+    const points = [
+      "1. เหตุเกิดเมื่อ ...........................................................................................................................",
+      "2. สถานที่เกิดเหตุ .....................................................................................................................",
+      "3. หมายเลขทะเบียน ................................................................................................................",
+      "4. ชื่อผู้ขับขี่ ..............................................................................................................................",
+      "   บัตรประชาชนเลขที่ ......................................................................................................",
+      "5. ที่อยู่ตามบัตร ........................................................................................................................",
+      "   ........................................................................................................... เบอร์โทรศัพท์ ....................................",
+      "6. ชื่อ/บริษัท เจ้าของรถยนต์ ..................................... เบอร์โทรศัพท์ ....................................",
+      "7. ชื่อ/บริษัท ประกันภัย ............................................ เบอร์โทรศัพท์ ....................................",
+      "8. ผู้ลงนามในหนังสือรับสภาพหนี้",
+      "   [  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม",
+      "9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ",
+      "   [  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ...........................................",
+      "10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย",
+      "    ชื่อ/บริษัท เจ้าของสายสื่อสาร ............................................ ความสูง ..........................."
+    ];
+
+    points.forEach(point => {
+      const splitPoint = doc.splitTextToSize(point, 150);
+      doc.text(splitPoint, 40, currentY);
+      currentY += (splitPoint.length * lineHeight);
+    });
+
+    // Page 2
+    doc.addPage();
+    currentY = 20;
+    
+    // Page Number
+    doc.setFontSize(12);
+    doc.text("- 2 -", 105, 15, { align: "center" });
+
+    // Item 11
+    doc.setFontSize(14);
+    const item11 = `11. รายการอุปกรณ์ที่ได้รับความเสียหาย ${totalItems} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้`;
+    const splitItem11 = doc.splitTextToSize(item11, 160);
+    doc.text(splitItem11, 40, currentY);
+    currentY += (splitItem11.length * lineHeight) + 10;
+
+    // 11.1 Table
+    doc.text(`11.1 รื้อถอน - ติดตั้งใหม่ ${damagedItems.length} รายการ เป็นจำนวนเงินทั้งสิ้น ${damagedTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท`, 45, currentY);
+    currentY += lineHeight + 3;
+
+    const tableHeaders = [['รายการ', 'ชื่อพัสดุ', 'จำนวน', 'หน่วย', 'ราคา']];
+    
+    const damagedData = damagedItems.map((item, index) => [
+      index + 1,
+      item.material.name,
+      item.quantity,
+      item.material.unit,
+      item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    ]);
+    
+    // Add empty rows to make it at least 5
+    while (damagedData.length < 5) {
+      damagedData.push(['', '', '', '', '']);
+    }
+
+    autoTable(doc, {
+      startY: currentY,
+      head: tableHeaders,
+      body: damagedData,
+      theme: 'grid',
+      styles: { font: 'Sarabun', fontSize: 10 },
+      headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], font: 'Sarabun', fontStyle: 'bold', halign: 'center' },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 15 },
+        1: { halign: 'left', cellWidth: 80 },
+        2: { halign: 'center', cellWidth: 20 },
+        3: { halign: 'center', cellWidth: 20 },
+        4: { halign: 'right', cellWidth: 35 },
+      },
+      margin: { left: 25 }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 15;
+
+    // 11.2 Table
+    doc.text(`11.2 แผนกซ่อมแซม ${reusableItems.length} รายการ เป็นจำนวนเงินทั้งสิ้น ${reusableTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท`, 45, currentY);
+    currentY += lineHeight + 3;
+
+    const reusableData = reusableItems.map((item, index) => [
+      index + 1,
+      item.material.name,
+      item.quantity,
+      item.material.unit,
+      item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    ]);
+
+    while (reusableData.length < 5) {
+      reusableData.push(['', '', '', '', '']);
+    }
+
+    autoTable(doc, {
+      startY: currentY,
+      head: tableHeaders,
+      body: reusableData,
+      theme: 'grid',
+      styles: { font: 'Sarabun', fontSize: 10 },
+      headStyles: { fillColor: [255, 255, 255], textColor: [0, 0, 0], font: 'Sarabun', fontStyle: 'bold', halign: 'center' },
+      columnStyles: {
+        0: { halign: 'center', cellWidth: 15 },
+        1: { halign: 'left', cellWidth: 80 },
+        2: { halign: 'center', cellWidth: 20 },
+        3: { halign: 'center', cellWidth: 20 },
+        4: { halign: 'right', cellWidth: 35 },
+      },
+      margin: { left: 25 }
+    });
+
+    currentY = (doc as any).lastAutoTable.finalY + 20;
+
+    // Closing
+    const closing = `จึงเรียนมาเพื่อพิจารณาอนุมัติให้ดำเนินการเบิกอุปกรณ์ไปซ่อมแซมตามรายการดังกล่าว พร้อมทั้งเป็นการเรียกเก็บเงินค่าเสียหายจากผู้กระทำละเมิด เป็นจำนวนเงินทั้งสิ้น ${totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท`;
+    const splitClosing = doc.splitTextToSize(closing, 160);
+    doc.text(splitClosing, 40, currentY);
+    currentY += (splitClosing.length * lineHeight) + 20;
+
+    // Signature
+    doc.text("(...........................................................)", 140, currentY, { align: "center" });
+    currentY += 10;
+    doc.text("ตำแหน่ง", 140, currentY, { align: "center" });
+
+    // Footer
+    doc.setFontSize(10);
+    doc.text("หน่วยงาน", 25, 280);
+    doc.text("โทร. ...........................................................", 25, 285);
+
+    doc.save("ค่าละเมิด1234_PI InnoTech.pdf");
   };
 
   if (loading) {
@@ -762,16 +983,12 @@ export default function App() {
                       Export Word
                     </button>
                     <button 
-                      disabled={items.length === 0 || exporting}
+                      disabled={items.length === 0}
                       onClick={exportPDF}
                       className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-100"
                     >
-                      {exporting ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <FileText className="w-5 h-5" />
-                      )}
-                      {exporting ? 'Exporting...' : 'Export PDF'}
+                      <FileText className="w-5 h-5" />
+                      Export PDF
                     </button>
                   </div>
                 </div>
@@ -780,180 +997,6 @@ export default function App() {
           </div>
         </div>
       </main>
-
-      {/* Hidden PDF Template for html2canvas */}
-      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-        <div id="pdf-template" style={{ 
-          width: '210mm', 
-          backgroundColor: 'white',
-          padding: '20mm 20mm 20mm 30mm', // left margin 30mm
-          boxSizing: 'border-box',
-          fontFamily: "'Sarabun', sans-serif",
-          fontSize: '13pt',
-          lineHeight: '1.3',
-          color: 'black'
-        }}>
-          {/* Page 1 */}
-          <div style={{ minHeight: '277mm', position: 'relative' }}>
-            <img 
-              src="https://img1.pic.in.th/images/PEA-02-Thai-Logo.md.jpg" 
-              alt="Logo" 
-              style={{ width: '41.5mm', height: '34.9mm', marginBottom: '3mm' }}
-              referrerPolicy="no-referrer"
-            />
-            
-            <div style={{ display: 'flex', marginBottom: '3mm' }}>
-              <div style={{ width: '80mm' }}>จาก</div>
-              <div style={{ width: '80mm', marginLeft: '0mm' }}>ถึง</div>
-            </div>
-            <div style={{ display: 'flex', marginBottom: '5mm' }}>
-              <div style={{ width: '80mm' }}>เลขที่</div>
-              <div style={{ width: '80mm', marginLeft: '0mm' }}>วันที่</div>
-            </div>
-
-            <div style={{ marginBottom: '3mm' }}>เรื่อง&nbsp;&nbsp;&nbsp;การประเมินค่าเสียหายที่เกิดขึ้นกับระบบจำหน่าย</div>
-            <div style={{ marginBottom: '5mm' }}>เรียน</div>
-
-            <div style={{ 
-              textIndent: '25mm', 
-              textAlign: 'justify', 
-              textJustify: 'inter-character', 
-              wordBreak: 'break-word',
-              marginBottom: '2mm',
-              lineHeight: '1.8',
-              letterSpacing: '0.2px',
-              textRendering: 'optimizeLegibility'
-            }}>
-              ตามที่ได้ดำเนินการตรวจสอบและประเมินราคาค่าเสียหายเพื่อเรียกร้องจากผู้กระทำละเมิด โดยมีรายละเอียด ดังนี้
-            </div>
-
-            <div style={{ marginLeft: '25mm' }}>
-              <div style={{ marginBottom: '2mm' }}>1. เหตุเกิดเมื่อ ...........................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>2. สถานที่เกิดเหตุ .......................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>3. หมายเลขทะเบียน ...................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>4. ชื่อผู้ขับขี่ ..................................................................................................</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ .........................................................</div>
-              <div style={{ marginBottom: '2mm' }}>5. ที่อยู่ตามบัตร ......................................................................................</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
-                <div style={{ width: '105mm' }}>......................................................................</div>
-                <div style={{ width: '85mm' }}>เบอร์โทรศัพท์ ..........</div>
-              </div>
-              <div style={{ display: 'flex', marginBottom: '2mm' }}>
-                <div style={{ width: '75mm' }}>6. ชื่อ/บริษัท เจ้าของรถยนต์ ..........</div>
-                <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
-              </div>
-              <div style={{ display: 'flex', marginBottom: '2mm' }}>
-                <div style={{ width: '75mm' }}>7. ชื่อ/บริษัท ประกันภัย ....................</div>
-                <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
-              </div>
-              <div style={{ marginBottom: '2mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
-              <div style={{ marginBottom: '2mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ...........................................</div>
-              <div style={{ marginBottom: '2mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
-                <div style={{ width: '75mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร ..</div>
-                <div style={{ width: '85mm' }}>ความสูง .......................</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Page 2 */}
-          <div style={{ minHeight: '242mm', position: 'relative', paddingTop: '35mm' }}>
-            <div style={{ position: 'absolute', top: '20mm', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
-            
-            <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '10mm' }}>
-              11. รายการอุปกรณ์ที่ได้รับความเสียหาย {items.length} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้
-            </div>
-
-            <div style={{ marginLeft: '10mm', marginBottom: '5mm' }}>
-              11.1 รื้อถอน - ติดตั้งใหม่ {items.filter(i => i.status === 'damaged').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'damaged').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
-            </div>
-
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10mm', fontSize: '10pt' }}>
-              <thead>
-                <tr>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ราคา</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.filter(i => i.status === 'damaged').map((item, idx) => (
-                  <tr key={idx}>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{idx + 1}</td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}>{item.material.name}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.material.unit}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  </tr>
-                ))}
-                {Array.from({ length: Math.max(0, 5 - items.filter(i => i.status === 'damaged').length) }).map((_, idx) => (
-                  <tr key={`empty-${idx}`}>
-                    <td style={{ border: '1px solid black', padding: '2px', height: '1.5em' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div style={{ marginLeft: '10mm', marginBottom: '5mm', marginTop: '10mm' }}>
-              11.2 แผนกซ่อมแซม {items.filter(i => i.status === 'reusable').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'reusable').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
-            </div>
-
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10mm', fontSize: '10pt' }}>
-              <thead>
-                <tr>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ราคา</th>
-                </tr>
-              </thead>
-              <tbody>
-                {items.filter(i => i.status === 'reusable').map((item, idx) => (
-                  <tr key={idx}>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{idx + 1}</td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}>{item.material.name}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'center' }}>{item.material.unit}</td>
-                    <td style={{ border: '1px solid black', padding: '2px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                  </tr>
-                ))}
-                {Array.from({ length: Math.max(0, 5 - items.filter(i => i.status === 'reusable').length) }).map((_, idx) => (
-                  <tr key={`empty-re-${idx}`}>
-                    <td style={{ border: '1px solid black', padding: '2px', height: '1.5em' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '2px' }}></td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-
-            <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '20mm', marginTop: '15mm' }}>
-              จึงเรียนมาเพื่อพิจารณาอนุมัติให้ดำเนินการเบิกอุปกรณ์ไปซ่อมแซมตามรายการดังกล่าว พร้อมทั้งเป็นการเรียกเก็บเงินค่าเสียหายจากผู้กระทำละเมิด เป็นจำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
-            </div>
-
-            <div style={{ textAlign: 'center', marginLeft: '80mm' }}>
-              <div style={{ marginBottom: '5mm' }}>(...........................................................)</div>
-              <div>ตำแหน่ง</div>
-            </div>
-
-            <div style={{ position: 'absolute', bottom: '0', left: '0', fontSize: '10pt' }}>
-              <div>หน่วยงาน</div>
-              <div>โทร. ...........................................................</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
       {/* Footer */}
       <footer className="max-w-6xl mx-auto px-4 py-12 text-center space-y-2">
@@ -981,16 +1024,12 @@ export default function App() {
             Word
           </button>
           <button 
-            disabled={items.length === 0 || exporting}
+            disabled={items.length === 0}
             onClick={exportPDF}
             className="bg-slate-800 text-white px-4 py-3 rounded-xl font-bold text-xs flex items-center gap-2 hover:bg-slate-900 transition-colors"
           >
-            {exporting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <FileText className="w-4 h-4" />
-            )}
-            {exporting ? '...' : 'PDF'}
+            <FileText className="w-4 h-4" />
+            PDF
           </button>
         </div>
       </div>

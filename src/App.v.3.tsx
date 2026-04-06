@@ -819,7 +819,7 @@ export default function App() {
               textAlign: 'justify', 
               textJustify: 'inter-character', 
               wordBreak: 'break-word',
-              marginBottom: '2mm',
+              marginBottom: '1mm',
               lineHeight: '1.8',
               letterSpacing: '0.2px',
               textRendering: 'optimizeLegibility'
@@ -828,30 +828,30 @@ export default function App() {
             </div>
 
             <div style={{ marginLeft: '25mm' }}>
-              <div style={{ marginBottom: '2mm' }}>1. เหตุเกิดเมื่อ ...........................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>2. สถานที่เกิดเหตุ .......................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>3. หมายเลขทะเบียน ...................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>4. ชื่อผู้ขับขี่ ..................................................................................................</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ .........................................................</div>
-              <div style={{ marginBottom: '2mm' }}>5. ที่อยู่ตามบัตร ......................................................................................</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
+              <div style={{ marginBottom: '1mm' }}>1. เหตุเกิดเมื่อ .............................................................................</div>
+              <div style={{ marginBottom: '1mm' }}>2. สถานที่เกิดเหตุ .........................................................................</div>
+              <div style={{ marginBottom: '1mm' }}>3. หมายเลขทะเบียน .........................................................................</div>
+              <div style={{ marginBottom: '1mm' }}>4. ชื่อผู้ขับขี่ ................................................................................</div>
+              <div style={{ marginBottom: '1mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ .........................................................</div>
+              <div style={{ marginBottom: '1mm' }}>5. ที่อยู่ตามบัตร ......................................................................................</div>
+              <div style={{ display: 'flex', marginBottom: '1mm', marginLeft: '-25mm' }}>
                 <div style={{ width: '105mm' }}>......................................................................</div>
                 <div style={{ width: '85mm' }}>เบอร์โทรศัพท์ ..........</div>
               </div>
-              <div style={{ display: 'flex', marginBottom: '2mm' }}>
+              <div style={{ display: 'flex', marginBottom: '1mm' }}>
                 <div style={{ width: '75mm' }}>6. ชื่อ/บริษัท เจ้าของรถยนต์ ..........</div>
                 <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
               </div>
-              <div style={{ display: 'flex', marginBottom: '2mm' }}>
+              <div style={{ display: 'flex', marginBottom: '1mm' }}>
                 <div style={{ width: '75mm' }}>7. ชื่อ/บริษัท ประกันภัย ....................</div>
                 <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
               </div>
-              <div style={{ marginBottom: '2mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
-              <div style={{ marginBottom: '2mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ...........................................</div>
-              <div style={{ marginBottom: '2mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
+              <div style={{ marginBottom: '1mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
+              <div style={{ marginBottom: '1mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
+              <div style={{ marginBottom: '1mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
+              <div style={{ marginBottom: '1mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ...........................................</div>
+              <div style={{ marginBottom: '1mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
+              <div style={{ display: 'flex', marginBottom: '1mm', marginLeft: '-25mm' }}>
                 <div style={{ width: '75mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร ..</div>
                 <div style={{ width: '85mm' }}>ความสูง .......................</div>
               </div>
@@ -859,8 +859,8 @@ export default function App() {
           </div>
 
           {/* Page 2 */}
-          <div style={{ minHeight: '242mm', position: 'relative', paddingTop: '35mm' }}>
-            <div style={{ position: 'absolute', top: '20mm', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
+          <div style={{ minHeight: '257mm', position: 'relative', paddingTop: '20mm' }}>
+            <div style={{ position: 'absolute', top: '0', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
             
             <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '10mm' }}>
               11. รายการอุปกรณ์ที่ได้รับความเสียหาย {items.length} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้
