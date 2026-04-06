@@ -828,33 +828,30 @@ export default function App() {
             </div>
 
             <div style={{ marginLeft: '25mm' }}>
-              <div style={{ marginBottom: '2mm' }}>1. เหตุเกิดเมื่อ ...........................................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>1. เหตุเกิดเมื่อ .............................................................................................</div>
               <div style={{ marginBottom: '2mm' }}>2. สถานที่เกิดเหตุ .......................................................................................</div>
               <div style={{ marginBottom: '2mm' }}>3. หมายเลขทะเบียน ...................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>4. ชื่อผู้ขับขี่ ..................................................................................................</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ .........................................................</div>
-              <div style={{ marginBottom: '2mm' }}>5. ที่อยู่ตามบัตร ......................................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>4. ชื่อผู้ขับขี่ ................................................................................................</div>
+              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ ...................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>5. ที่อยู่ตามบัตร ..........................................................................................</div>
               <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
-                <div style={{ width: '105mm' }}>......................................................................</div>
-                <div style={{ width: '85mm' }}>เบอร์โทรศัพท์ ..........</div>
+                <div style={{ width: '100mm' }}>....................................................................................</div>
+                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ...................</div>
               </div>
               <div style={{ display: 'flex', marginBottom: '2mm' }}>
-                <div style={{ width: '75mm' }}>6. ชื่อ/บริษัท เจ้าของรถยนต์ ..........</div>
-                <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
+                <div style={{ width: '75mm' }}>6. ชื่อ/บริษัท เจ้าของรถยนต์ ..................</div>
+                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ...................</div>
               </div>
               <div style={{ display: 'flex', marginBottom: '2mm' }}>
-                <div style={{ width: '75mm' }}>7. ชื่อ/บริษัท ประกันภัย ....................</div>
-                <div style={{ width: '60mm' }}>เบอร์โทรศัพท์ ..........</div>
+                <div style={{ width: '75mm' }}>7. ชื่อ/บริษัท ประกันภัย .........................</div>
+                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ...................</div>
               </div>
               <div style={{ marginBottom: '2mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
               <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
               <div style={{ marginBottom: '2mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ...........................................</div>
+              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ................................</div>
               <div style={{ marginBottom: '2mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
-              <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
-                <div style={{ width: '75mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร ..</div>
-                <div style={{ width: '85mm' }}>ความสูง .......................</div>
-              </div>
+              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร .............................. ความสูง ...................</div>
             </div>
           </div>
 
@@ -862,22 +859,22 @@ export default function App() {
           <div style={{ minHeight: '242mm', position: 'relative', paddingTop: '35mm' }}>
             <div style={{ position: 'absolute', top: '20mm', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
             
-            <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '10mm' }}>
+            <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '5mm' }}>
               11. รายการอุปกรณ์ที่ได้รับความเสียหาย {items.length} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้
             </div>
 
-            <div style={{ marginLeft: '10mm', marginBottom: '5mm' }}>
+            <div style={{ marginBottom: '2mm', marginLeft: '30mm' }}>
               11.1 รื้อถอน - ติดตั้งใหม่ {items.filter(i => i.status === 'damaged').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'damaged').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10mm', fontSize: '10pt' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: '10pt' }}>
               <thead>
                 <tr>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ราคา</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '15%' }}>รายการ</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '45%' }}>ชื่อพัสดุ</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '10%' }}>จำนวน</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '10%' }}>หน่วย</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '20%' }}>ราคา</th>
                 </tr>
               </thead>
               <tbody>
@@ -902,18 +899,18 @@ export default function App() {
               </tbody>
             </table>
 
-            <div style={{ marginLeft: '10mm', marginBottom: '5mm', marginTop: '10mm' }}>
+            <div style={{ marginBottom: '2mm', marginTop: '5mm', marginLeft: '30mm' }}>
               11.2 แผนกซ่อมแซม {items.filter(i => i.status === 'reusable').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'reusable').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
             <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '10mm', fontSize: '10pt' }}>
               <thead>
                 <tr>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '2px' }}>ราคา</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '15%' }}>รายการ</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '45%' }}>ชื่อพัสดุ</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '10%' }}>จำนวน</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '10%' }}>หน่วย</th>
+                  <th style={{ border: '1px solid black', padding: '2px', width: '20%' }}>ราคา</th>
                 </tr>
               </thead>
               <tbody>
