@@ -270,7 +270,7 @@ export default function App() {
         default: {
           document: {
             run: {
-              font: "TH Sarabun New",
+              font: "TH SarabunPSK",
               size: 32, // 16pt
             },
           },
