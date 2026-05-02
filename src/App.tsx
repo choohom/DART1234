@@ -40,6 +40,7 @@ import {
   ImageRun,
   Footer,
   Header,
+  PageNumber,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { cn } from '@/src/lib/utils';
@@ -166,6 +167,24 @@ export default function App() {
     setItems(items.filter((_, i) => i !== index));
   };
 
+  // Helper to group items by material name
+  const groupItems = (itemsList: AssessmentItem[]) => {
+    const grouped: { [key: string]: AssessmentItem } = {};
+    itemsList.forEach(item => {
+      const key = item.material.name;
+      if (grouped[key]) {
+        grouped[key] = {
+          ...grouped[key],
+          quantity: grouped[key].quantity + item.quantity,
+          totalPrice: grouped[key].totalPrice + item.totalPrice
+        };
+      } else {
+        grouped[key] = { ...item };
+      }
+    });
+    return Object.values(grouped);
+  };
+
   const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
   const exportWord = async () => {
@@ -182,24 +201,6 @@ export default function App() {
     };
 
     const logoBuffer = await fetchImage("https://img1.pic.in.th/images/PEA-02-Thai-Logo.md.jpg");
-
-    // Helper to group items by material name
-    const groupItems = (itemsList: AssessmentItem[]) => {
-      const grouped: { [key: string]: AssessmentItem } = {};
-      itemsList.forEach(item => {
-        const key = item.material.name;
-        if (grouped[key]) {
-          grouped[key] = {
-            ...grouped[key],
-            quantity: grouped[key].quantity + item.quantity,
-            totalPrice: grouped[key].totalPrice + item.totalPrice
-          };
-        } else {
-          grouped[key] = { ...item };
-        }
-      });
-      return Object.values(grouped);
-    };
 
     const damagedItems = groupItems(items.filter(i => i.status === 'damaged'));
     const reusableItems = groupItems(items.filter(i => i.status === 'reusable'));
@@ -293,7 +294,11 @@ export default function App() {
           default: new Header({
             children: [
               new Paragraph({
-                children: [new TextRun("- 2 -")],
+                children: [
+                  new TextRun({ text: "- " }),
+                  new TextRun({ children: [PageNumber.CURRENT] }),
+                  new TextRun({ text: " -" })
+                ],
                 alignment: AlignmentType.CENTER,
               }),
             ],
@@ -486,6 +491,15 @@ export default function App() {
         pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
         heightLeft -= pageHeight;
+      }
+      
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 2; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFont("Sarabun");
+        pdf.setFontSize(10);
+        // Position at top, 15mm from top edge
+        pdf.text(`- ${i} -`, pdfWidth / 2, 15, { align: 'center' });
       }
 
       pdf.save("ค่าละเมิด1234_PI InnoTech.pdf");
@@ -756,22 +770,28 @@ export default function App() {
                     <button 
                       disabled={items.length === 0}
                       onClick={exportWord}
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#EF0107] text-white font-bold rounded-xl hover:bg-[#DB0007] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-100"
+                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 bg-[#EF0107] text-white font-bold rounded-xl hover:bg-[#DB0007] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-100"
                     >
-                      <Download className="w-5 h-5" />
-                      Export Word
+                      <div className="flex items-center gap-2">
+                        <Download className="w-5 h-5" />
+                        Export Word
+                      </div>
+                      <span className="text-[10px] font-normal opacity-90">(For Notebook & PC)</span>
                     </button>
                     <button 
                       disabled={items.length === 0 || exporting}
                       onClick={exportPDF}
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-100"
+                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-100"
                     >
-                      {exporting ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <FileText className="w-5 h-5" />
-                      )}
-                      {exporting ? 'Exporting...' : 'Export PDF'}
+                      <div className="flex items-center gap-2">
+                        {exporting ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <FileText className="w-5 h-5" />
+                        )}
+                        {exporting ? 'Exporting...' : 'Export PDF'}
+                      </div>
+                      <span className="text-[10px] font-normal opacity-90">(For Tablet & Smart Phone)</span>
                     </button>
                   </div>
                 </div>
@@ -789,8 +809,8 @@ export default function App() {
           padding: '20mm 20mm 20mm 30mm', // left margin 30mm
           boxSizing: 'border-box',
           fontFamily: "'Sarabun', sans-serif",
-          fontSize: '13pt',
-          lineHeight: '1.3',
+          fontSize: '12pt',
+          lineHeight: '1.5',
           color: 'black'
         }}>
           {/* Page 1 */}
@@ -820,7 +840,7 @@ export default function App() {
               textJustify: 'inter-character', 
               wordBreak: 'break-word',
               marginBottom: '2mm',
-              lineHeight: '1.8',
+              lineHeight: '1.5',
               letterSpacing: '0.2px',
               textRendering: 'optimizeLegibility'
             }}>
@@ -828,114 +848,114 @@ export default function App() {
             </div>
 
             <div style={{ marginLeft: '25mm' }}>
-              <div style={{ marginBottom: '2mm' }}>1. เหตุเกิดเมื่อ .............................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>2. สถานที่เกิดเหตุ .......................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>3. หมายเลขทะเบียน ...................................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>4. ชื่อผู้ขับขี่ ................................................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>1. เหตุเกิดเมื่อ ..................................................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>2. สถานที่เกิดเหตุ ............................................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>3. หมายเลขทะเบียน ........................................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>4. ชื่อผู้ขับขี่ .....................................................................................................</div>
               <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>บัตรประชาชนเลขที่ ...................................................................</div>
-              <div style={{ marginBottom: '2mm' }}>5. ที่อยู่ตามบัตร ..........................................................................................</div>
+              <div style={{ marginBottom: '2mm' }}>5. ที่อยู่ตามบัตร ...............................................................................................</div>
               <div style={{ display: 'flex', marginBottom: '2mm', marginLeft: '-25mm' }}>
-                <div style={{ width: '100mm' }}>....................................................................................</div>
-                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ...................</div>
+                <div style={{ width: '100mm' }}>............................................................................................</div>
+                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ......................</div>
               </div>
               <div style={{ display: 'flex', marginBottom: '2mm' }}>
-                <div style={{ width: '75mm' }}>6. ชื่อ/บริษัท เจ้าของรถยนต์ ..................</div>
-                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ...................</div>
+                <div style={{ width: '75mm' }}>6. ชื่อ/บริษัท เจ้าของรถยนต์ .....................</div>
+                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ......................</div>
               </div>
               <div style={{ display: 'flex', marginBottom: '2mm' }}>
-                <div style={{ width: '75mm' }}>7. ชื่อ/บริษัท ประกันภัย .........................</div>
-                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ...................</div>
+                <div style={{ width: '75mm' }}>7. ชื่อ/บริษัท ประกันภัย ............................</div>
+                <div style={{ width: '50mm' }}>เบอร์โทรศัพท์ ......................</div>
               </div>
               <div style={{ marginBottom: '2mm' }}>8. ผู้ลงนามในหนังสือรับสภาพหนี้</div>
               <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] ผู้ขับขี่    [  ] เจ้าของรถยนต์    [  ] ไม่ยินยอม</div>
               <div style={{ marginBottom: '2mm' }}>9. การแจ้งความร้องทุกข์กับเจ้าหน้าที่ตำรวจ</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก ................................</div>
+              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>[  ] แจ้งเป็นหลักฐาน    [  ] แจ้งความเป็นคดี เนื่องจาก .....................................</div>
               <div style={{ marginBottom: '2mm' }}>10. กรณีรถยนต์เกี่ยวสายสื่อสารทำให้เกิดความเสียหายกับระบบจำหน่าย</div>
-              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร .............................. ความสูง ...................</div>
+              <div style={{ marginBottom: '2mm', marginLeft: '5mm' }}>ชื่อ/บริษัท เจ้าของสายสื่อสาร .............................. ความสูง ........................</div>
             </div>
           </div>
 
           {/* Page 2 */}
-          <div style={{ minHeight: '242mm', position: 'relative', paddingTop: '35mm' }}>
-            <div style={{ position: 'absolute', top: '20mm', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>- 2 -</div>
+          <div style={{ minHeight: '242mm', position: 'relative', paddingTop: '20mm' }}>
+            <div style={{ position: 'absolute', top: '20mm', left: '50%', transform: 'translateX(-50%)', fontSize: '12pt' }}>&nbsp;</div>
             
             <div style={{ textIndent: '25mm', textAlign: 'justify', marginBottom: '2mm' }}>
-              11. รายการอุปกรณ์ที่ได้รับความเสียหาย {items.length} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้
+              11. รายการอุปกรณ์ที่ได้รับความเสียหาย {groupItems(items).length} รายการ คิดเป็นค่าเสียหาย จำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท โดยมีรายละเอียดดังนี้
             </div>
 
-            <div style={{ marginBottom: '2mm', marginLeft: '30mm' }}>
-              11.1 รื้อถอน - ติดตั้งใหม่ {items.filter(i => i.status === 'damaged').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'damaged').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
+            <div style={{ marginBottom: '5mm', marginLeft: '30mm' }}>
+              11.1 รื้อถอน - ติดตั้งใหม่ {groupItems(items.filter(i => i.status === 'damaged')).length} รายการ เป็นจำนวนเงินทั้งสิ้น {groupItems(items.filter(i => i.status === 'damaged')).reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: '10pt' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: '10pt' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f2f2f2' }}>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '50%' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '20%' }}>ราคา</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '10%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>รายการ</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '50%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>ชื่อพัสดุ</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '10%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>จำนวน</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '10%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>หน่วย</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '20%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>ราคา</th>
                 </tr>
               </thead>
               <tbody>
-                {items.filter(i => i.status === 'damaged').map((item, idx) => (
+                {groupItems(items.filter(i => i.status === 'damaged')).map((item, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{idx + 1}</td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}>{item.material.name}</td>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.material.unit}</td>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'center' }}>{idx + 1}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}>{item.material.name}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'center' }}>{item.quantity}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'center' }}>{item.material.unit}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
-                {Array.from({ length: Math.max(0, 5 - items.filter(i => i.status === 'damaged').length) }).map((_, idx) => (
+                {Array.from({ length: Math.max(0, 5 - groupItems(items.filter(i => i.status === 'damaged')).length) }).map((_, idx) => (
                   <tr key={`empty-${idx}`}>
-                    <td style={{ border: '1px solid black', padding: '5px', height: '1.5em' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', height: '1.5em' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div style={{ marginBottom: '2mm', marginTop: '5mm', marginLeft: '30mm' }}>
-              11.2 แผนกซ่อมแซม {items.filter(i => i.status === 'reusable').length} รายการ เป็นจำนวนเงินทั้งสิ้น {items.filter(i => i.status === 'reusable').reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
+            <div style={{ marginBottom: '5mm', marginTop: '5mm', marginLeft: '30mm' }}>
+              11.2 แผนกซ่อมแซม {groupItems(items.filter(i => i.status === 'reusable')).length} รายการ เป็นจำนวนเงินทั้งสิ้น {groupItems(items.filter(i => i.status === 'reusable')).reduce((sum, i) => sum + i.totalPrice, 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
-            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '2mm', fontSize: '10pt' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', marginBottom: '5mm', fontSize: '10pt' }}>
               <thead>
                 <tr style={{ backgroundColor: '#f2f2f2' }}>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>รายการ</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '50%' }}>ชื่อพัสดุ</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>จำนวน</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '10%' }}>หน่วย</th>
-                  <th style={{ border: '1px solid black', padding: '5px', width: '20%' }}>ราคา</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '10%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>รายการ</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '50%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>ชื่อพัสดุ</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '10%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>จำนวน</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '10%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>หน่วย</th>
+                  <th style={{ border: '1px solid black', padding: '10px 5px', width: '20%', textAlign: 'center', verticalAlign: 'middle', lineHeight: '1.2' }}>ราคา</th>
                 </tr>
               </thead>
               <tbody>
-                {items.filter(i => i.status === 'reusable').map((item, idx) => (
+                {groupItems(items.filter(i => i.status === 'reusable')).map((item, idx) => (
                   <tr key={idx}>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{idx + 1}</td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}>{item.material.name}</td>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.quantity}</td>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'center' }}>{item.material.unit}</td>
-                    <td style={{ border: '1px solid black', padding: '5px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'center' }}>{idx + 1}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}>{item.material.name}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'center' }}>{item.quantity}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'center' }}>{item.material.unit}</td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', textAlign: 'right' }}>{item.totalPrice.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                   </tr>
                 ))}
-                {Array.from({ length: Math.max(0, 5 - items.filter(i => i.status === 'reusable').length) }).map((_, idx) => (
+                {Array.from({ length: Math.max(0, 5 - groupItems(items.filter(i => i.status === 'reusable')).length) }).map((_, idx) => (
                   <tr key={`empty-re-${idx}`}>
-                    <td style={{ border: '1px solid black', padding: '5px', height: '1.5em' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
-                    <td style={{ border: '1px solid black', padding: '5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px', height: '1.5em' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
+                    <td style={{ border: '1px solid black', padding: '8px 5px' }}></td>
                   </tr>
                 ))}
               </tbody>
             </table>
 
-            <div style={{ textAlign: 'justify', marginBottom: '30mm', marginTop: '5mm', lineHeight: '1.6' }}>
+            <div style={{ textAlign: 'justify', textJustify: 'inter-character', marginBottom: '30mm', marginTop: '5mm', lineHeight: '1.6', letterSpacing: '0.25px' }}>
               &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;จึงเรียนมาเพื่อพิจารณาอนุมัติให้ดำเนินการเบิกอุปกรณ์ไปซ่อมแซมตามรายการดังกล่าว พร้อมทั้งเป็นการเรียกเก็บเงินค่าเสียหายจากผู้กระทำละเมิด เป็นจำนวนเงินทั้งสิ้น {totalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} บาท
             </div>
 
@@ -944,7 +964,7 @@ export default function App() {
               <div>ตำแหน่ง</div>
             </div>
 
-            <div style={{ position: 'absolute', bottom: '0', left: '0', fontSize: '10pt' }}>
+            <div style={{ position: 'absolute', bottom: '30', left: '0', fontSize: '10pt' }}>
               <div>หน่วยงาน</div>
               <div>โทร. ...........................................................</div>
             </div>

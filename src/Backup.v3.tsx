@@ -40,6 +40,7 @@ import {
   ImageRun,
   Footer,
   Header,
+  PageNumber,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { cn } from '@/src/lib/utils';
@@ -166,6 +167,24 @@ export default function App() {
     setItems(items.filter((_, i) => i !== index));
   };
 
+  // Helper to group items by material name
+  const groupItems = (itemsList: AssessmentItem[]) => {
+    const grouped: { [key: string]: AssessmentItem } = {};
+    itemsList.forEach(item => {
+      const key = item.material.name;
+      if (grouped[key]) {
+        grouped[key] = {
+          ...grouped[key],
+          quantity: grouped[key].quantity + item.quantity,
+          totalPrice: grouped[key].totalPrice + item.totalPrice
+        };
+      } else {
+        grouped[key] = { ...item };
+      }
+    });
+    return Object.values(grouped);
+  };
+
   const totalAmount = items.reduce((sum, item) => sum + item.totalPrice, 0);
 
   const exportWord = async () => {
@@ -182,24 +201,6 @@ export default function App() {
     };
 
     const logoBuffer = await fetchImage("https://img1.pic.in.th/images/PEA-02-Thai-Logo.md.jpg");
-
-    // Helper to group items by material name
-    const groupItems = (itemsList: AssessmentItem[]) => {
-      const grouped: { [key: string]: AssessmentItem } = {};
-      itemsList.forEach(item => {
-        const key = item.material.name;
-        if (grouped[key]) {
-          grouped[key] = {
-            ...grouped[key],
-            quantity: grouped[key].quantity + item.quantity,
-            totalPrice: grouped[key].totalPrice + item.totalPrice
-          };
-        } else {
-          grouped[key] = { ...item };
-        }
-      });
-      return Object.values(grouped);
-    };
 
     const damagedItems = groupItems(items.filter(i => i.status === 'damaged'));
     const reusableItems = groupItems(items.filter(i => i.status === 'reusable'));
@@ -293,7 +294,11 @@ export default function App() {
           default: new Header({
             children: [
               new Paragraph({
-                children: [new TextRun("- 2 -")],
+                children: [
+                  new TextRun({ text: "- " }),
+                  new TextRun({ children: [PageNumber.CURRENT] }),
+                  new TextRun({ text: " -" })
+                ],
                 alignment: AlignmentType.CENTER,
               }),
             ],
@@ -486,6 +491,15 @@ export default function App() {
         pdf.addPage();
         pdf.addImage(imgData, 'JPEG', 0, position, pdfWidth, pdfHeight);
         heightLeft -= pageHeight;
+      }
+      
+      const totalPages = pdf.getNumberOfPages();
+      for (let i = 2; i <= totalPages; i++) {
+        pdf.setPage(i);
+        pdf.setFont("Sarabun");
+        pdf.setFontSize(10);
+        // Position at top, 15mm from top edge
+        pdf.text(`- ${i} -`, pdfWidth / 2, 15, { align: 'center' });
       }
 
       pdf.save("ค่าละเมิด1234_PI InnoTech.pdf");
@@ -756,22 +770,28 @@ export default function App() {
                     <button 
                       disabled={items.length === 0}
                       onClick={exportWord}
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-[#EF0107] text-white font-bold rounded-xl hover:bg-[#DB0007] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-100"
+                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 bg-[#EF0107] text-white font-bold rounded-xl hover:bg-[#DB0007] transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-red-100"
                     >
-                      <Download className="w-5 h-5" />
-                      Export Word
+                      <div className="flex items-center gap-2">
+                        <Download className="w-5 h-5" />
+                        Export Word
+                      </div>
+                      <span className="text-[10px] font-normal opacity-90">(For Notebook & PC)</span>
                     </button>
                     <button 
                       disabled={items.length === 0 || exporting}
                       onClick={exportPDF}
-                      className="flex-1 flex items-center justify-center gap-2 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-100"
+                      className="flex-1 flex flex-col items-center justify-center gap-1 py-4 bg-slate-800 text-white font-bold rounded-xl hover:bg-slate-900 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-slate-100"
                     >
-                      {exporting ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <FileText className="w-5 h-5" />
-                      )}
-                      {exporting ? 'Exporting...' : 'Export PDF'}
+                      <div className="flex items-center gap-2">
+                        {exporting ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <FileText className="w-5 h-5" />
+                        )}
+                        {exporting ? 'Exporting...' : 'Export PDF'}
+                      </div>
+                      <span className="text-[10px] font-normal opacity-90">(For Tablet & Smart Phone)</span>
                     </button>
                   </div>
                 </div>
@@ -780,31 +800,6 @@ export default function App() {
           </div>
         </div>
       </main>
-
-      {/* Hidden PDF Template for html2canvas */}
-      <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
-        <div id="pdf-template" style={{ 
-          width: '210mm', 
-          backgroundColor: 'white',
-          padding: '20mm 20mm 20mm 30mm', // left margin 30mm
-          boxSizing: 'border-box',
-          fontFamily: "'Sarabun', sans-serif",
-          fontSize: '13pt',
-          lineHeight: '1.3',
-          color: 'black'
-        }}>
-          {/* Page 1 */}
-          <div style={{ minHeight: '277mm', position: 'relative' }}>
-            <img 
-              src="https://img1.pic.in.th/images/PEA-02-Thai-Logo.md.jpg" 
-              alt="Logo" 
-              referrerPolicy="no-referrer"
-              style={{ width: '40mm', marginBottom: '5mm' }}
-            />
-            {/* ... rest of the template ... */}
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
